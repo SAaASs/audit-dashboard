@@ -3,8 +3,12 @@ import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid,
-  LineChart, ResponsiveContainer, Line, ComposedChart
+  LineChart, ResponsiveContainer, Line, ComposedChart, RadarChart, PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar, Cell
 } from 'recharts';
+import { LabelList } from "recharts";
 
 const months = [
   { name: 'январь', fact: 2.03, plan: 3.0 },
@@ -94,6 +98,24 @@ const zgd = [
   { name: 'ЗГД по МТО', prev: 2.41, curr: 2.43 },
   { name: 'Главный инженер', prev: 2.20, curr: 2.16 },
 ];
+const radarDataMap: Record<string, { name: string; self: number; result: number }[]> = {
+  "Менеджмент": [
+    { name: "M1", self: 0.75, result: 0.75 },
+    { name: "M2", self: 0.75, result: 0.50 },
+    { name: "M3", self: 1.75, result: 1.75 },
+    { name: "M4.1", self: 1.50, result: 1.00 },
+    { name: "M4.2", self: 1.80, result: 1.80 },
+    { name: "M5", self: 0.25, result: 0.25 },
+    { name: "M6", self: 2.00, result: 1.67 },
+    { name: "M7", self: 0.67, result: 0.67 },
+    { name: "M8", self: 1.33, result: 0.67 },
+  ],
+
+  // Другие разделы →
+  // "Подготовка производства": [...],
+  // "SF-m Ручные операции": [...],
+};
+
 const short = (name: string) => {
   if (typeof window !== "undefined" && window.innerWidth < 768) {
     return name
@@ -117,134 +139,149 @@ const sectionsWithGap = sections.map((s) => ({
   gap: Math.max(0, s.plan - s.fact), // Разница между планом и фактом
 }));
 const Dashboard = () => {
+  const [selectedSection, setSelectedSection] = React.useState<string | null>(null);
+
   return (
       <>
         {/* ======= ВЕРХНИЙ БЛОК (адаптивная трёхколоночная сетка) ======= */}
-        <div className="p-6 bg-slate-900 text-white
-          grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* ================= ВЕРХНИЙ БЛОК: 2 графика друг под другом ================= */}
+        <div className="p-6 bg-slate-900 text-white space-y-6 w-full">
 
-          <div className="col-span-1 sm:col-span-2 lg:col-span-2 space-y-6">
-            <h1 className="text-2xl font-bold text-center lg:text-left">
-              Развитие ДК ТОС АО «ЖДРМ»
-            </h1>
+          <h1 className="text-2xl font-bold text-center lg:text-left">
+            Развитие ДК ТОС АО «ЖДРМ»
+          </h1>
 
-            {/* === Статус по месяцам === */}
-            <Card className="bg-slate-800">
-              <CardContent className="p-4">
-                <h2 className="text-lg font-semibold mb-2 text-center lg:text-left text-white">
-                  Статус развития ДК ТОС по месяцам
-                </h2>
+          {/* === Статус по филиалам === */}
+          <Card className="bg-slate-800 w-full">
+            <CardContent className="p-4">
+              <h2 className="text-lg font-semibold mb-2 text-center lg:text-left text-white">
+                Статус развития ДК ТОС по филиалам
+              </h2>
 
-                <div className="w-full h-[220px] sm:h-[260px]">
-                  <ResponsiveContainer>
-                    <ComposedChart data={months}>
-                      <XAxis dataKey="name" stroke="#ccc"/>
-                      <YAxis stroke="#ccc"/>
-                      <Tooltip/>
-                      <Legend/>
-                      <Bar dataKey="fact" fill="#4f83ff" name="Факт" barSize={35} />
-                      <Line type="monotone" dataKey="plan" stroke="#9bb3ff" strokeWidth={2} name="План"/>
-                    </ComposedChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
+              <div className="w-full h-[260px]">
+                <ResponsiveContainer>
+                  <ComposedChart data={branches}>
+                    <XAxis dataKey="name" stroke="#ccc"/>
+                    <YAxis stroke="#ccc" domain={[0, 3]}/>
+                    <Legend/>
+                    <Bar dataKey="fact" fill="#4f83ff" barSize={35}>
+                      <LabelList dataKey="fact" position="top" fill="#fff" fontSize={12}/>
+                    </Bar>
+                    <Line type="monotone" dataKey="plan" stroke="#9bb3ff" strokeWidth={2}/>
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* === Статус по филиалам === */}
-            <Card className="bg-slate-800">
-              <CardContent className="p-4">
-                <h2 className="text-lg font-semibold mb-2 text-center lg:text-left text-white">
-                  Статус развития ДК ТОС по филиалам
-                </h2>
+          {/* === Статус по ЗГД === */}
+          <Card className="bg-slate-800 w-full">
+            <CardContent className="p-4">
+              <h2 className="text-lg font-semibold mb-2 text-center lg:text-left text-white">
+                Статус развития ДК ТОС в разрезе ЗГД
+              </h2>
 
-                <div className="w-full h-[220px] sm:h-[260px]">
-                  <ResponsiveContainer>
-                    <ComposedChart data={branches}>
-                      <XAxis dataKey="name" stroke="#ccc"/>
-                      <YAxis stroke="#ccc"/>
-                      <Tooltip/>
-                      <Legend/>
-                      <Bar dataKey="fact" fill="#4f83ff" barSize={35}/>
-                      <Line type="monotone" dataKey="plan" stroke="#9bb3ff" strokeWidth={2}/>
-                    </ComposedChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* === Статус по ЗГД === */}
-            <Card className="bg-slate-800">
-              <CardContent className="p-4">
-                <h2 className="text-lg font-semibold mb-2 text-center lg:text-left text-white">
-                  Статус развития ДК ТОС в разрезе ЗГД
-                </h2>
-
-                <div className="w-full h-[280px] sm:h-[350px]">
-                  <ResponsiveContainer>
-                    <ComposedChart data={zgd}>
-                      <XAxis dataKey="name" stroke="#ccc" interval={0} angle={-30} textAnchor="end" height={80}/>
-                      <YAxis stroke="#ccc"/>
-                      <Tooltip/>
-                      <Legend/>
-                      <Bar dataKey="prev" fill="#a3a3a3" barSize={35}/>
-                      <Bar dataKey="curr" fill="#4f83ff" barSize={35}/>
-                    </ComposedChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* === ПРАВЫЙ ГРАФИК (адаптивная перестановка) === */}
-          <div className="col-span-1 sm:col-span-2 lg:col-span-1">
-            <Card className="bg-slate-800 h-full">
-              <CardContent className="p-4 h-full">
-                <h2 className="text-lg font-semibold mb-2 text-center lg:text-left text-white">
-                  Статус по разделам ДК ТОС
-                </h2>
-
-                <div className="w-full h-[450px] sm:h-[600px] lg:h-full">
-                  <ResponsiveContainer>
-                    <ComposedChart data={sectionsWithGap} layout="vertical">
-                      <XAxis type="number" stroke="#ccc" domain={[0, 3.5]}/>
-                      <YAxis dataKey="name" type="category" width={140} stroke="#ccc"/>
-                      <Tooltip/>
-                      <Legend/>
-
-                      {/* Факт */}
-                      <Bar
-                          dataKey="fact"
-                          fill="#4f83ff"
-                          barSize={30}
-                          stackId="a"
-                          name="Факт"
-                      />
-
-                      {/* Разница между фактом и планом */}
-                      <Bar
-                          dataKey="gap"
-                          fill="rgba(255,255,255,0.25)"
-                          barSize={30}
-                          stackId="a"
-                          name="Отклонение"
-                      />
-
-                      {/* Линия плана */}
-                      <Line
-                          type="monotone"
-                          dataKey="plan"
-                          stroke="#9bb3ff"
-                          strokeWidth={2}
-                          name="План"
-                      />
-                    </ComposedChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
+              <div className="w-full h-[350px]">
+                <ResponsiveContainer>
+                  <ComposedChart data={zgd}>
+                    <XAxis dataKey="name" stroke="#ccc" interval={0} angle={-30} textAnchor="end" height={80}/>
+                    <YAxis stroke="#ccc"/>
+                    <Legend/>
+                    <Bar dataKey="prev" fill="#a3a3a3" barSize={35}>
+                      <LabelList dataKey="prev" position="top" fill="#fff" fontSize={12}/>
+                    </Bar>
+                    <Bar dataKey="curr" fill="#4f83ff" barSize={35}>
+                      <LabelList dataKey="curr" position="top" fill="#fff" fontSize={12}/>
+                    </Bar>
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
         </div>
+
+
+        {/* ================= НИЖНИЙ БЛОК: 2 графика рядом ================= */}
+        <div className="w-full px-6 pb-6 bg-slate-900 text-white">
+
+          {/* ====== FLEX-контейнер 50/50 ====== */}
+          <div className="flex flex-col lg:flex-row w-full gap-6">
+
+            {/* === ЛЕВАЯ ПАНЕЛЬ — 50% === */}
+            <div className="w-full lg:w-1/2 bg-slate-800 rounded-2xl p-4">
+              <h2 className="text-lg font-semibold mb-2 text-center lg:text-left text-white">
+                Статус по разделам ДК ТОС
+              </h2>
+
+              <div className="w-full h-[500px]">
+                <ResponsiveContainer>
+                  <ComposedChart data={sectionsWithGap} layout="vertical">
+                    <XAxis type="number" stroke="#ccc" domain={[0, 3.5]}/>
+                    <YAxis dataKey="name" type="category" width={140} stroke="#ccc"/>
+                    <Legend/>
+
+                    <Bar dataKey="fact" stackId="a" fill="#4f83ff" barSize={30}>
+                      {sectionsWithGap.map((entry, index) => (
+                          <Cell
+                              key={`cell-${index}`}
+                              fill="#4f83ff"
+                              cursor="pointer"
+                              onClick={() => setSelectedSection(entry.name)}
+                          />
+                      ))}
+                      <LabelList dataKey="fact" position="right" fill="#fff" fontSize={12}/>
+                    </Bar>
+
+                    <Bar dataKey="gap" stackId="a" fill="rgba(255,255,255,0.25)" barSize={30}/>
+                    <Line type="monotone" dataKey="plan" stroke="#9bb3ff" strokeWidth={2} name="План"/>
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* === ПРАВАЯ ПАНЕЛЬ — 50% === */}
+            <div className="w-full lg:w-1/2 bg-slate-800 rounded-2xl p-4">
+              <h2 className="text-lg font-semibold mb-2 text-center lg:text-left text-white">
+                Диагностика выполнения критериев раздела
+              </h2>
+
+              {selectedSection ? (
+                  <div className="w-full h-[500px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart data={radarDataMap[selectedSection]}>
+                        <PolarGrid/>
+                        <PolarAngleAxis dataKey="name"/>
+                        <PolarRadiusAxis angle={30} domain={[0, 5]}/>
+
+                        <Radar
+                            name="Самооценка"
+                            dataKey="self"
+                            stroke="#4f83ff"
+                            fill="#4f83ff"
+                            fillOpacity={0.5}
+                        />
+                        <Radar
+                            name="Результат"
+                            dataKey="result"
+                            stroke="#ffcc00"
+                            fill="#ffcc00"
+                            fillOpacity={0.5}
+                        />
+
+                        <Legend/>
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </div>
+              ) : (
+                  <div className="text-center text-gray-400 mt-20">
+                    Нажмите на раздел слева чтобы увидеть диаграмму
+                  </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+
 
         {/* ======= НИЖНИЙ БЛОК — адаптивные карточки ======= */}
         <div className="bg-[#1E2432] text-white min-h-screen p-6">
@@ -253,62 +290,11 @@ const Dashboard = () => {
           </h1>
 
           {/* ===== ФИЛЬТРЫ ===== */}
-          <div className="flex flex-wrap gap-2 mb-6 text-sm justify-center lg:justify-start">
-            <div className="flex gap-2">
-              {["2024", "2025", "2026", "2027"].map((y) => (
-                  <button key={y} className="bg-[#2A3144] px-3 py-1 rounded-lg whitespace-nowrap">
-                    {y}
-                  </button>
-              ))}
-            </div>
 
-            <div className="flex flex-wrap gap-2 ml-0 lg:ml-6 justify-center lg:justify-start">
-              {["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
-                "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"]
-                  .map((m) => (
-                      <button key={m} className="bg-[#2A3144] px-3 py-1 rounded-lg text-sm whitespace-nowrap">
-                        {m}
-                      </button>
-                  ))}
-            </div>
-
-            <div className="flex flex-wrap gap-2 ml-0 lg:ml-6 justify-center lg:justify-start">
-              {["УЛРЗ", "УУЛВРЗ", "ОЛРЗ", "ЧЭРЗ", "АТРЗ", "РЭРЗ", "ВТРЗ", "ЯЭРЗ"]
-                  .map((p) => (
-                      <button key={p} className="bg-[#2A3144] px-3 py-1 rounded-lg text-sm whitespace-nowrap">
-                        {p}
-                      </button>
-                  ))}
-            </div>
-          </div>
 
           {/* ===== НИЖНИЕ 3 ГРАФИКА ===== */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
-            {/* === По месяцам === */}
-            <div className="bg-[#2A3144] rounded-2xl p-4">
-              <h2 className="text-lg mb-2 font-semibold text-center lg:text-left text-white">
-                Выполнение мероприятий по ДК ТОС по месяцам
-              </h2>
-
-              <div className="w-full h-[220px] sm:h-[240px]">
-                <ResponsiveContainer>
-                  <BarChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#3E4A63"/>
-                    <XAxis dataKey="name"/>
-                    <YAxis/>
-                    <Tooltip/>
-                    <Legend/>
-                    <Bar dataKey="факт" fill="#6BA7FF" barSize={18}/>
-                    <Line type="monotone" dataKey="план" stroke="#FFFFFF" strokeWidth={2}/>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              <p className="text-center mt-2 text-gray-300">
-                Факт на текущий момент: <b>8054</b>
-              </p>
-            </div>
 
             {/* === По филиалам === */}
             <div className="bg-[#2A3144] rounded-2xl p-4">
@@ -316,19 +302,49 @@ const Dashboard = () => {
                 Выполнение мероприятий по ДК ТОС по филиалам
               </h2>
 
+
               <div className="w-full h-[220px] sm:h-[240px]">
                 <ResponsiveContainer>
                   <BarChart data={branchData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#3E4A63"/>
                     <XAxis dataKey="name"/>
-                    <YAxis/>
-                    <Tooltip/>
+                    <YAxis stroke="#ccc" domain={[0, 10000]}/>
+
+
+                    {/* Отключаем tooltip полностью */}
+                    <Tooltip content={<></>} wrapperStyle={{display: "none"}}/>
+
                     <Legend/>
-                    <Bar dataKey="факт" fill="#6BA7FF" barSize={18}/>
-                    <Line type="monotone" dataKey="план" stroke="#FFFFFF" strokeWidth={2}/>
+
+                    {/* === FACT BAR + LABELS === */}
+                    <Bar
+                        dataKey="fact"
+                        stackId="a"
+                        fill="#4f83ff"
+                        barSize={30}
+                    >
+                      <LabelList
+                          dataKey="факт"
+                          position="top"
+                          fill="#ffffff"
+                          fontSize={12}
+                          dy={-20}
+                          formatter={(v) => (v !== null ? v : "")}
+                      />
+                    </Bar>
+
+                    {/* === LINE === */}
+                    <Line
+                        type="monotone"
+                        dataKey="план"
+                        stroke="#FFFFFF"
+                        strokeWidth={2}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+
+
             </div>
 
             {/* === По уровням === */}
@@ -343,7 +359,7 @@ const Dashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" stroke="#3E4A63"/>
                     <XAxis type="number"/>
                     <YAxis dataKey="name" type="category"/>
-                    <Tooltip/>
+
                     <Legend/>
                     <Bar dataKey="lvl1" stackId="a" fill="#6BA7FF" barSize={16}/>
                     <Bar dataKey="lvl2" stackId="a" fill="#5E8EE8" barSize={16}/>
@@ -381,137 +397,9 @@ const Dashboard = () => {
             </div>
 
           </div>
+
         </div>
-        {/* ================= MOBILE VERSION ================= */}
-        <div className="lg:hidden w-full max-w-full p-3 bg-slate-900 text-white space-y-6">
 
-          <h1 className="text-xl font-bold text-center">
-            Развитие ДК ТОС АО «ЖДРМ»
-          </h1>
-
-          {/* --- Статус по месяцам --- */}
-          <Card className="bg-slate-800">
-            <CardContent className="p-3">
-              <h2 className="text-base font-semibold mb-1 text-center">
-                По месяцам
-              </h2>
-              <div className="w-full h-[180px]">
-                <ResponsiveContainer>
-                  <ComposedChart data={months}>
-                    <XAxis dataKey={(d) => short(d.name)} stroke="#ccc" />
-                    <YAxis stroke="#ccc" />
-                    <Tooltip />
-                    <Legend wrapperStyle={{ fontSize: "10px" }} />
-                    <Bar dataKey="fact" fill="#4f83ff" barSize={20} />
-                    <Line dataKey="plan" stroke="#9bb3ff" strokeWidth={2} />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* --- Статус по филиалам --- */}
-          <Card className="bg-slate-800">
-            <CardContent className="p-3">
-              <h2 className="text-base font-semibold mb-1 text-center">
-                По филиалам
-              </h2>
-              <div className="w-full h-[180px]">
-                <ResponsiveContainer>
-                  <ComposedChart data={branches.map(b => ({ ...b, name: short(b.name) }))}>
-                    <XAxis dataKey="name" stroke="#ccc" />
-                    <YAxis stroke="#ccc" />
-                    <Tooltip />
-                    <Legend wrapperStyle={{ fontSize: "10px" }} />
-                    <Bar dataKey="fact" fill="#4f83ff" barSize={20} />
-                    <Line dataKey="plan" stroke="#9bb3ff" strokeWidth={2} />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* --- Статус по ЗГД --- */}
-          <Card className="bg-slate-800">
-            <CardContent className="p-3">
-              <h2 className="text-base font-semibold mb-1 text-center">
-                По ЗГД
-              </h2>
-              <div className="w-full h-[200px]">
-                <ResponsiveContainer>
-                  <ComposedChart data={zgd.map(z => ({ ...z, name: short(z.name) }))}>
-                    <XAxis
-                        dataKey="name"
-                        interval={0}
-                        angle={-20}
-                        textAnchor="end"
-                        height={50}
-                        stroke="#ccc"
-                    />
-                    <YAxis stroke="#ccc" />
-                    <Tooltip />
-                    <Legend wrapperStyle={{ fontSize: "10px" }} />
-                    <Bar dataKey="prev" fill="#a3a3a3" barSize={16} />
-                    <Bar dataKey="curr" fill="#4f83ff" barSize={16} />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* --- Статус по разделам --- */}
-          <Card className="bg-slate-800">
-            <CardContent className="p-3">
-              <h2 className="text-base font-semibold mb-1 text-center">По разделам</h2>
-              <div className="w-full h-[350px]">
-                <ResponsiveContainer>
-                  <ComposedChart
-                      data={sections.map(s => ({ ...s, name: short(s.name) }))}
-                      layout="vertical"
-                  >
-                    <XAxis type="number" stroke="#ccc" domain={[0, 3.5]} />
-                    <YAxis
-                        dataKey="name"
-                        type="category"
-                        width={90}
-                        stroke="#ccc"
-                    />
-                    <Tooltip />
-                    <Legend wrapperStyle={{ fontSize: "10px" }} />
-                    <Bar dataKey="fact" fill="#4f83ff" barSize={20} />
-                    <Line dataKey="plan" stroke="#9bb3ff" strokeWidth={2} />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* --- Таблица --- */}
-          <div className="bg-[#2A3144] rounded-2xl p-3">
-            <h2 className="text-base mb-2 font-semibold text-center">Раздел</h2>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs border-t border-[#3E4A63]">
-                <thead>
-                <tr className="text-gray-400 border-b border-[#3E4A63]">
-                  <th className="py-1 text-left">Раздел</th>
-                  <th className="py-1 text-right">Прошл.</th>
-                  <th className="py-1 text-right">Текущ.</th>
-                </tr>
-                </thead>
-                <tbody>
-                {tableData.map((row, idx) => (
-                    <tr key={idx} className="border-b border-[#3E4A63]">
-                      <td className="py-1">{short(row.section)}</td>
-                      <td className="py-1 text-right">{row.prev.toFixed(2)}</td>
-                      <td className="py-1 text-right">{row.current.toFixed(2)}</td>
-                    </tr>
-                ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
 
       </>
   );
