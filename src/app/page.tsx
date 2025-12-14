@@ -10,30 +10,37 @@ import {
 } from 'recharts';
 import { LabelList } from "recharts";
 const data = await fetch("/real_example.json").then(r => r.json());
-const data1 = await fetch("/self_example.json").then(r => r.json());
+const data1 = await fetch("/self_example_fake.json").then(r => r.json());
 console.log(data["results"])
-function calcResultsBySection(data) {
+function calcResultsBySection(data, data1) {
   let m = 0
-  let res2 = {}
+  const res2 = {}
   for (const outerKey of Object.keys(data)) {
     //console.log(outerKey)
     res2[outerKey] = []
     for (const innerKey of Object.keys(data[outerKey])) {
       m+=1
       let sum = 0;
-      const values = Object.values(data[outerKey][innerKey]);  // [true, true, true, false] и т.п.
+      let sum1 = 0;
+      const values = Object.values(data[outerKey][innerKey]);
+      const values1 = Object.values(data1[outerKey][innerKey]);// [true, true, true, false] и т.п.
       for (const innerKey2 of Object.keys(values)) {
         let trueCount = 0
+        let trueCount1 = 0
         for (const innerKey3 of Object.keys(values[innerKey2])) {
           if (values[innerKey2][innerKey3]) {
             trueCount += 1
           }
-
+          if (values1[innerKey2][innerKey3]) {
+            trueCount1 += 1
+          }
         }
         const ii = Object.keys(values[innerKey2]).length
+        const ii1 = Object.keys(values1[innerKey2]).length
         sum+= trueCount/ii
+        sum1+= trueCount1/ii1
       }
-      res2[outerKey].push({ name: `M${m}`, result: sum })
+      res2[outerKey].push({ name: `M${m}`, self: sum1, result: sum })
     }
 
 
@@ -59,7 +66,7 @@ const radarDataMap: Record<string, { name: string; self: number; result: number 
   // "SF-m Ручные операции": [...],
 };
 
-const arr = calcResultsBySection(data["results"], "Менеджмент", { prefix: "M" });
+const arr = calcResultsBySection(data["results"], data1["results"]);
 console.log(arr);
 
 const months = [
