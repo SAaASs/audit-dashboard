@@ -9,6 +9,58 @@ import {
   Radar, Cell
 } from 'recharts';
 import { LabelList } from "recharts";
+const data = await fetch("/real_example.json").then(r => r.json());
+const data1 = await fetch("/self_example.json").then(r => r.json());
+console.log(data["results"])
+function calcResultsBySection(data) {
+  let m = 0
+  let res2 = {}
+  for (const outerKey of Object.keys(data)) {
+    //console.log(outerKey)
+    res2[outerKey] = []
+    for (const innerKey of Object.keys(data[outerKey])) {
+      m+=1
+      let sum = 0;
+      const values = Object.values(data[outerKey][innerKey]);  // [true, true, true, false] и т.п.
+      for (const innerKey2 of Object.keys(values)) {
+        let trueCount = 0
+        for (const innerKey3 of Object.keys(values[innerKey2])) {
+          if (values[innerKey2][innerKey3]) {
+            trueCount += 1
+          }
+
+        }
+        const ii = Object.keys(values[innerKey2]).length
+        sum+= trueCount/ii
+      }
+      res2[outerKey].push({ name: `M${m}`, result: sum })
+    }
+
+
+
+  }
+  console.log(res2)
+}
+const radarDataMap: Record<string, { name: string; self: number; result: number }[]> = {
+  "Менеджмент": [
+    { name: "M1", self: 0.75, result: 0.75 },
+    { name: "M2", self: 0.75, result: 0.50 },
+    { name: "M3", self: 1.75, result: 1.75 },
+    { name: "M4.1", self: 1.50, result: 1.00 },
+    { name: "M4.2", self: 1.80, result: 1.80 },
+    { name: "M5", self: 0.25, result: 0.25 },
+    { name: "M6", self: 2.00, result: 1.67 },
+    { name: "M7", self: 0.67, result: 0.67 },
+    { name: "M8", self: 1.33, result: 0.67 },
+  ],
+
+  // Другие разделы →
+  // "Подготовка производства": [...],
+  // "SF-m Ручные операции": [...],
+};
+
+const arr = calcResultsBySection(data["results"], "Менеджмент", { prefix: "M" });
+console.log(arr);
 
 const months = [
   { name: 'январь', fact: 2.03, plan: 3.0 },
@@ -98,23 +150,6 @@ const zgd = [
   { name: 'ЗГД по МТО', prev: 2.41, curr: 2.43 },
   { name: 'Главный инженер', prev: 2.20, curr: 2.16 },
 ];
-const radarDataMap: Record<string, { name: string; self: number; result: number }[]> = {
-  "Менеджмент": [
-    { name: "M1", self: 0.75, result: 0.75 },
-    { name: "M2", self: 0.75, result: 0.50 },
-    { name: "M3", self: 1.75, result: 1.75 },
-    { name: "M4.1", self: 1.50, result: 1.00 },
-    { name: "M4.2", self: 1.80, result: 1.80 },
-    { name: "M5", self: 0.25, result: 0.25 },
-    { name: "M6", self: 2.00, result: 1.67 },
-    { name: "M7", self: 0.67, result: 0.67 },
-    { name: "M8", self: 1.33, result: 0.67 },
-  ],
-
-  // Другие разделы →
-  // "Подготовка производства": [...],
-  // "SF-m Ручные операции": [...],
-};
 
 const short = (name: string) => {
   if (typeof window !== "undefined" && window.innerWidth < 768) {
